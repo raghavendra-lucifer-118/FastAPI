@@ -1,32 +1,7 @@
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-import database_models
-from database import SessionLocal, engine
+from fastapi import FastAPI
 from models import Product
-
-database_models.Base.metadata.create_all(bind=engine)
-
 app = FastAPI()
 
-# CORS for React dev server
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-# list of products with 4 products like phones, laptops, pens, tables
 products = [
     Product(id=1, name="Phone", description="A smartphone", price=699.99, quantity=50),
     Product(id=2, name="Laptop", description="A powerful laptop", price=999.99, quantity=30),
@@ -34,64 +9,41 @@ products = [
     Product(id=4, name="Table", description="A wooden table", price=199.99, quantity=20),
 ]
 
-product = Product(id=5, name="Chair", description="A comfortable chair", price=89.99, quantity=15)
+@app.get("/")
+def home():
+    return "FastAPI App"
 
-
-
-
-def init_db():
-    db = SessionLocal()
-
-    existing_count = db.query(database_models.Product).count()
-
-    if existing_count == 0:
-        for product in products:
-            db.add(database_models.Product(**product.model_dump()))
-        db.commit()
-        print("Database initialized with sample products.")
-        
-    db.close()
-
-init_db()    
-
-@app.get("/products/")
-def get_all_products(db: Session = Depends(get_db)):
-    products = db.query(database_models.Product).all()
+@app.get("/products")
+def get_products():
     return products
 
 
-@app.get("/products/{product_id}")
-def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
-    product = db.query(database_models.Product).filter(database_models.Product.id == product_id).first()
-    if product:
-        return product
-    return {"error": "Product not found"}
+@app.get("/products/{id}")
+def get_product_by_id(id : int):
+    for product in products:
+        if product.id == id:
+            return product
+    return 'Product not found'    
 
-@app.post("/products/")
-def create_product(product: Product, db: Session = Depends(get_db)):
-    db.add(database_models.Product(**product.model_dump()))
-    db.commit()
-    return {"message": "Product created successfully", "product": product}
+@app.post("/product")
+def add_product(prodcut : Product):
+    products.append(prodcut)
+    return products
 
-@app.put("/products/{product_id}")
-def update_product(product_id: int, product: Product, db: Session = Depends(get_db)):
-    db_product = db.query(database_models.Product).filter(database_models.Product.id == product_id).first()
-    if not db_product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    db_product.name = product.name
-    db_product.description = product.description
-    db_product.price = product.price
-    db_product.quantity = product.quantity
-    db.commit()
-    db.refresh(db_product)
-    return {"message": "Product updated successfully", "product": db_product}
+@app.put("/product")
+def update_product(product:Product , id:int):
+    for i in range(0,len(products)):
+        if products[i].id == id:
+            products[i] = product
+            return "Product added successfully"
+    return "Failed"    
 
 
-@app.delete("/products/{product_id}")
-def delete_product(product_id: int, db: Session = Depends(get_db)):
-    db_product = db.query(database_models.Product).filter(database_models.Product.id == product_id).first()
-    if not db_product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    db.delete(db_product)
-    db.commit()
-    return {"message": "Product deleted successfully"}
+@app.delete("/product")
+def delete_product(id:int):
+    for product in products:
+        if product.id == id:
+            products.remove(product)
+            return "Product deletion successfull"
+    return "Failed"    
+            
