@@ -1,5 +1,5 @@
 
-# Telusko Trac - Product Inventory Management
+# Product Inventory Management
 
 A comprehensive product inventory management system built with FastAPI backend and React frontend, providing seamless tracking and management of product inventory.
 
@@ -42,34 +42,6 @@ stocksphere/
 ├── .gitignore       # Git ignore file
 └── README.md        # This file
 ```
-
-## API Usage Examples
-
-### Get all products
-```bash
-curl http://localhost:8000/products/
-```
-
-### Get product by ID
-```bash
-curl http://localhost:8000/products/1
-```
-
-### Create a new product
-```bash
-curl -X POST "http://localhost:8000/products/" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "id": 5,
-       "name": "Monitor",
-       "description": "4K monitor",
-       "price": 299.99,
-       "quantity": 15
-     }'
-```
-
-## Models
-
 ### Product
 - `id`: integer
 - `name`: string
